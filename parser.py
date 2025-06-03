@@ -6,6 +6,15 @@ X offset
 Y offset
 '''
 
+# Operators
+OPERS = (
+	'plus',
+	'minus',
+	'bitflip',
+	'not'
+)
+
+
 
 class Parser:
 	# Initialize parser #
@@ -73,7 +82,8 @@ class Parser:
 						self.abort('e', 'Missing expression', tx, ty, tb)
 					
 					expr = self.get_expression(tok, toks)
-					self.node[-1][-1].append(['return', [expr]])
+					expr = self.bond(expr[::-1], 0)
+					self.node[-1][-1].append(['return', expr])
 					del expr
 				
 				# Panic (⁠٥⁠•⁠▽⁠•⁠)
@@ -143,18 +153,73 @@ class Parser:
 	
 	
 	# Find expression boundaries and extract them #
-	def get_expression(self, tok, toks):
-		expr = toks.pop()
+	def get_expression(self, parent, toks):
+		expr = []
+		# Group the tokens in a single expession
+		while True:
+			tt, tv, tb, tx, ty = tok = toks.pop()
+			if tt == 'semicolon':
+				break
+			
+			if tt != 'integer' and tt not in OPERS:
+				self.abort('e', 'Invalid expression', tx, ty, tb)
+			
+			if not toks:
+				self.abort('e', 'Missing expression terminator', tx, ty, tb)
+			
+			expr.append(tok)
 		
-		if expr[0] != 'integer':
-			self.abort('e', 'Invalid expression', expr[3], expr[4], expr[2])
+		return expr
+	
+	
+	# "Atomic bonding" aproach (Pratt parsing) #
+	def bond(self, expr, min_power=0):
+		ATOMS = {
+			'plus': {
+				'left': 1,
+				'right': 0,
+				'flip': True,
+				'binary': False
+			},
+			'minus': {
+				'left': 1,
+				'right': 0,
+				'flip': True,
+				'binary': False
+			},
+			'bitflip': {
+				'left': 1,
+				'right': 0,
+				'flip': True,
+				'binary': False
+			},
+			'not': {
+				'left': 1,
+				'right': 0,
+				'flip': True,
+				'binary': False
+			}
+		}
 		
-		if not toks:
-			self.abort('e', 'Missing expression terminator', tok[3], tok[4], tok[2])
+		if len(expr) == 1:
+			tok = expr.pop()
+			if tok[0] != 'integer':
+				self.abort('e', 'Unexpected token', tok[3], tok[4], tok[2])
+			
+			return [['integer', tok[1], []]]
 		
-		# Terminator
-		tt, tv, tb, tx, ty = toks.pop()
-		if tt != 'semicolon':
-			self.abort('e', f"Expecting ';', got '{tb}'", tx, ty, tb)
+		out = []
+		lhs = None  # Left-hand side
+		rhs = None  # Right-hand side
 		
-		return ['integer', expr[1], []]
+		while expr:
+			tok = expr.pop()
+			# For now, let's assume that only unary operators exist
+			if tok[0] in OPERS:
+				if not expr:
+					self.abort('e', 'Missing right-hand side operand', tok[3], tok[4], tok[2])
+				
+				rhs = self.bond(expr)
+				out.append([tok[0], rhs])
+		
+		return out

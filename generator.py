@@ -3,6 +3,11 @@ class Generator:
 	def __init__(self, code, ast):
 		self.code = code
 		
+		# Various counters to keep each label unique
+		self.counters = {
+			'not': 0
+		}
+		
 		# For now, it can only compile a single file
 		self.out = [
 '''.entry reset
@@ -67,6 +72,34 @@ reset:
 				# Load integer constant
 				case 'integer':
 					self.out.append(f'\tli $v0, {node[1]}')
+				
+				# Bitflip (11000011 -> 00111100)
+				case 'bitflip':
+					self(node[-1])
+					self.out.append('\tnor $v0, $zero, $v0')
+				
+				# Negative (5 -> -5)
+				case 'minus':
+					self(node[-1])
+					self.out.append('\tsub $v0, $zero, $v0')
+				
+				# Positive (5 -> 5) (It sort of does nothing ¯⁠\⁠_⁠(⁠ツ⁠)⁠_⁠/⁠¯ )
+				case 'plus':
+					self(node[-1])
+				
+				# Not (5 -> 0, 0 -> 1)
+				case 'not':
+					count = self.counters['not']
+					self.counters['not'] += 1
+					self(node[-1])
+					self.out.append(f'''\tbeq $v0, $zero, not_true_{count}
+	nop
+	li $v0, 0
+	j not_end_{count}
+	nop
+not_true_{count}:
+	li $v0, 1
+not_end_{count}:''')
 				
 				# Panic (⁠٥⁠•⁠▽⁠•⁠)
 				case _:

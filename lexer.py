@@ -52,7 +52,7 @@ class Lexer:
 		x = y = 0
 		
 		for char in code + ' ':
-			if char in '\n\t (){};':
+			if char in '\n\t (){};+-~!':
 				# Identify token
 				self.match_buffer(buffer, buff_x, y)
 				buffer = ''
@@ -76,6 +76,18 @@ class Lexer:
 					
 					case ';':
 						self.out.append(('semicolon', ';', ';', x, y))
+					
+					case '+':
+						self.out.append(('plus', '+', '+', x, y))
+					
+					case '-':
+						self.out.append(('minus', '-', '-', x, y))
+					
+					case '~':
+						self.out.append(('bitflip', '~', '~', x, y))
+					
+					case '!':
+						self.out.append(('not', '!', '!', x, y))
 			
 			else:
 				if not buffer: buff_x = x
@@ -85,7 +97,7 @@ class Lexer:
 	
 	
 	# Token identifier #
-	def match_buffer(self, buff, x, y):
+	def match_buffer(self, buff, x, y) -> None:
 		if not buff: return
 		
 		# Statement identifier

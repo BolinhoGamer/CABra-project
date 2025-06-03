@@ -47,9 +47,11 @@ def print_ast(ast, depth=0):
 
 
 # Opens the selected file
-fname = 'c/test_0/binary.c'
+fname = 'c/test_1/mix.c'
 with open(fname) as file:
 	code = file.read()
+	
+print(code.replace('\t', '  '))
 
 # Token broker
 print()

@@ -14,6 +14,7 @@ class Generator:
 .text
 
 reset:
+	li $sp, 0x3ffffc
 	jal _main
 	nop
 	mtc2 $zero, 0
@@ -23,7 +24,7 @@ reset:
 		self(ast)
 	
 	
-	# Abort compilation (generstion phase) #
+	# Abort compilation (generation phase) #
 	def abort(self, e, msg, x, y, base):
 		# This should never be triggered unless the compiler is being updated
 		# If this ever get triggered on normal usage, there's something wrong
@@ -100,6 +101,111 @@ reset:
 not_true_{count}:
 	li $v0, 1
 not_end_{count}:''')
+
+				# Multiply (5 * 2 -> 10)
+				case 'mult':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	mult $t0, $v0
+	mflo $v0''')
+				
+				# Divide (5 / 2 -> 2)
+				case 'div':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	div $t0, $v0
+	mflo $v0''')
+
+				# Modulo (5 % 2 -> 1)
+				case 'mod':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	div $t0, $v0
+	mfhi $v0''')
+	
+				# Addition (5 + 2 -> 7)
+				case 'add':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	add $v0, $t0, $v0''')
+				
+				# Subtraction (5 - 2 -> 3)
+				case 'sub':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	sub $v0, $t0, $v0''')
+					
+				# Right shift (5 >> 2 -> 1)
+				case 'rshift':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	srav $v0, $t0, $v0''')
+				
+				# Left shift (5 << 2 -> 20)
+				case 'lshift':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	sllv $v0, $t0, $v0''')
+	
+				# Bitwise AND (0b101 & 0b011 -> 0b001)
+				case 'and':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	and $v0, $t0, $v0''')
+	
+				
+				# Bitwise OR (0b101 | 0b011 -> 0b111)
+				case 'or':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	or $v0, $t0, $v0''')
+	
+				
+				# Bitwise XOR (0b101 ^ 0b011 -> 0b110)
+				case 'xor':
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append('''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	xor $v0, $t0, $v0''')
 				
 				# Panic (⁠٥⁠•⁠▽⁠•⁠)
 				case _:

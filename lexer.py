@@ -50,9 +50,16 @@ class Lexer:
 		buffer = ''
 		buff_x = 0
 		x = y = 0
+		skip = 0
 		
-		for char in code + ' ':
-			if char in '\n\t (){};+-~!':
+		for idx, char in enumerate(code + ' '):
+			# Skip the current character
+			if skip:
+				skip -= 1
+				x += 1
+				continue
+				
+			if char in '\n\t (){};+-~!*/%><&|^':
 				# Identify token
 				self.match_buffer(buffer, buff_x, y)
 				buffer = ''
@@ -88,6 +95,36 @@ class Lexer:
 					
 					case '!':
 						self.out.append(('not', '!', '!', x, y))
+					
+					case '*':
+						self.out.append(('star', '*', '*', x, y))
+					
+					case '/':
+						self.out.append(('div', '/', '/', x, y))
+					
+					case '%':
+						self.out.append(('mod', '%', '%', x, y))
+					
+					case '&':
+						self.out.append(('and', '&', '&', x, y))
+					
+					case '|':
+						self.out.append(('or', '|', '|', x, y))
+					
+					case '^':
+						self.out.append(('xor', '^', '^', x, y))
+					
+					case '>':
+						if idx < len(code):
+							if code[idx+1] == '>':
+								self.out.append(('rshift', '>>', '>>', x, y))
+								skip += 1
+					
+					case '<':
+						if idx < len(code):
+							if code[idx+1] == '<':
+								self.out.append(('lshift', '<<', '<<', x, y))
+								skip += 1
 			
 			else:
 				if not buffer: buff_x = x

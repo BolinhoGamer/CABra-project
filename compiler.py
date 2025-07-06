@@ -3,6 +3,9 @@ from parser import Parser
 from generator import Generator
 
 
+# Preprocessor
+
+
 # Lexer
 
 # TODO: [OK] Binary integers
@@ -47,7 +50,7 @@ def print_ast(ast, depth=0):
 
 
 # Opens the selected file
-fname = 'c/test_1/mix.c'
+fname = 'c/test_2/mix.c'
 with open(fname) as file:
 	code = file.read()
 	
@@ -73,6 +76,6 @@ generator = Generator(code, parser.out)
 print('\n'.join(generator.out))
 
 # Saves the assembly output
-fname = 'c/test_0/a.s'
+fname = 'c/a.s'
 with open(fname, 'w') as file:
 	file.write('\n'.join(generator.out))

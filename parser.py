@@ -11,7 +11,17 @@ OPERS = (
 	'plus',
 	'minus',
 	'bitflip',
-	'not'
+	'not',
+	'star',
+	'div',
+	'mod',
+	'add',
+	'sub',
+	'rshift',
+	'lshift',
+	'and',
+	'or',
+	'xor'
 )
 
 
@@ -176,31 +186,74 @@ class Parser:
 	def bond(self, expr, min_power=0):
 		ATOMS = {
 			'plus': {
-				'left': 1,
-				'right': 0,
-				'flip': True,
+				'power': 7,
 				'binary': False
 			},
 			'minus': {
-				'left': 1,
-				'right': 0,
-				'flip': True,
+				'power': 7,
 				'binary': False
 			},
 			'bitflip': {
-				'left': 1,
-				'right': 0,
-				'flip': True,
+				'power': 7,
 				'binary': False
 			},
 			'not': {
-				'left': 1,
-				'right': 0,
-				'flip': True,
+				'power': 7,
 				'binary': False
+			},
+			'star': {
+				'left': 6,
+				'right': 6.1,
+				'binary': True
+			},
+			'div': {
+				'left': 6,
+				'right': 6.1,
+				'binary': True
+			},
+			'mod': {
+				'left': 6,
+				'right': 6.1,
+				'binary': True
+			},
+			'add': {
+				'left': 5,
+				'right': 5.1,
+				'binary': True
+			},
+			'sub': {
+				'left': 5,
+				'right': 5.1,
+				'binary': True
+			},
+			'rshift': {
+				'left': 4,
+				'right': 4.1,
+				'binary': True
+			},
+			'lshift': {
+				'left': 4,
+				'right': 4.1,
+				'binary': True
+			},
+			'and': {
+				'left': 3,
+				'right': 3.1,
+				'binary': True
+			},
+			'or': {
+				'left': 2,
+				'right': 2.1,
+				'binary': True
+			},
+			'xor': {
+				'left': 1,
+				'right': 1.1,
+				'binary': True
 			}
 		}
 		
+		# Handles single integer costants
 		if len(expr) == 1:
 			tok = expr.pop()
 			if tok[0] != 'integer':
@@ -215,11 +268,69 @@ class Parser:
 		while expr:
 			tok = expr.pop()
 			# For now, let's assume that only unary operators exist
-			if tok[0] in OPERS:
+			if tok[0] in OPERS and type(tok) is tuple and not ATOMS[tok[0]]['binary']:
 				if not expr:
 					self.abort('e', 'Missing right-hand side operand', tok[3], tok[4], tok[2])
+					
+				rhs = self.bond(expr, 999)
+				print(rhs, tok)
+				if type(rhs) is tuple:
+					expr.append([tok[0], rhs[0]])
+				else:
+					return [[tok[0], rhs]]
+			
+			# Checks for binary operators
+			elif tok[0] == 'integer' or type(tok) is list:
+				# Stand-alone constants are handled outside this loop,
+				# so it's always guarranteed to be a following token
+				op = expr.pop()
 				
-				rhs = self.bond(expr)
-				out.append([tok[0], rhs])
+				# This check should never be triggered unless during development
+				# If this ever get triggered, something is wrong
+				if op[0] not in ATOMS.keys():
+					self.abort('i', 'Operator not implemented', op[3], op[4], op[2])
+				
+				# Replace unary plus and unary minus to addition and subtraction
+				if op[0] in ('plus', 'minus'):
+					op = ({
+						'plus': 'add',
+						'minus': 'sub'
+					}[op[0]],) + op[1:]
+				
+				# Checks if the operator have a lower precedence than the last operator
+				if ATOMS[op[0]]['binary'] and ATOMS[op[0]]['left'] <= min_power:
+					expr.append(op)
+					if type(tok) is tuple:
+						return [['integer', tok[1], []]],
+					else:
+						return [tok],
+				
+				# Error checking
+				if op[0] not in OPERS:
+					self.abort('e', 'Trying to perform an operation using a non-operator element', op[3], op[4], op[2])
+				
+				if not ATOMS[op[0]]['binary']:
+					self.abort('e', 'Cannot perform a binary operation using a unary operator', op[3], op[4], op[2])
+				
+				# Try to resolve the right side of the operator
+				if type(tok) is tuple:
+					lhs = [['integer', tok[1], []]]
+				else:
+					lhs = [[tok[0], tok[1]]]
+				rhs = self.bond(expr, ATOMS[op[0]]['right'])
+				
+				if op[0] == 'star':
+					op = ({
+						'star': 'mult',
+					}[op[0]],) + op[1:]
+				
+				if type(rhs) is not tuple:
+					out.append([op[0], lhs + rhs])
+				else:
+					expr.append([op[0], lhs + rhs[0]])
+			
+			# Checks for invalid elements
+			else:
+				self.abort('e', 'Invalid element', tok[3], tok[4], tok[2])
 		
 		return out

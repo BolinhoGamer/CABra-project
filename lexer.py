@@ -2,7 +2,7 @@ class Lexer:
 	# Initialize lexer #
 	def __init__(self, code):
 		self.code = code
-		self.out = list()
+		self.out = []  # [] is a faster constructor
 		self(self.remove_comments(code))
 	
 	

@@ -5,6 +5,8 @@ from generator import Generator
 
 # Preprocessor
 
+# --TODO-- #
+
 
 # Lexer
 
@@ -24,7 +26,7 @@ from generator import Generator
 
 # Generator
 
-# TODO: Generate function exit without the 'return'
+# TODO: [OK] Generate function exit without the 'return'
 
 
 # AST Printer #
@@ -50,7 +52,7 @@ def print_ast(ast, depth=0):
 
 
 # Opens the selected file
-fname = 'c/test_2/mix.c'
+fname = 'c/test_3/parenthesis.c'
 with open(fname) as file:
 	code = file.read()
 	

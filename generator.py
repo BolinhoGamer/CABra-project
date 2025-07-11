@@ -63,6 +63,13 @@ reset:
 				case 'function':
 					self.out.append(f'_{node[1]}:')
 					self(node[-1])
+					
+					# If a function does not end with an explicit return,
+					# raise a warning and add a return
+					if not node[-1] or node[-1][-1][0] != 'return':
+						self.abort('w', f"Function '{node[1]}' does not have a return statement",
+						           node[2][0], node[2][1], node[1])
+						self.out.append('\tjr $ra\n\tnop')
 				
 				# Generate function return
 				case 'return':

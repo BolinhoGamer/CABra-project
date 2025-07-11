@@ -147,6 +147,7 @@ class Parser:
 			[
 				'function',
 				nb,
+				(nx, ny),
 			[]]
 		)
 		
@@ -171,7 +172,7 @@ class Parser:
 			if tt == 'semicolon':
 				break
 			
-			if tt != 'integer' and tt not in OPERS:
+			if tt not in ('integer', 'open paren', 'close paren') and tt not in OPERS:
 				self.abort('e', 'Invalid expression', tx, ty, tb)
 			
 			if not toks:
@@ -184,6 +185,18 @@ class Parser:
 	
 	# "Atomic bonding" aproach (Pratt parsing) #
 	def bond(self, expr, min_power=0):
+		# Handles single integer costants
+		if len(expr) == 1:
+			tok = expr.pop()
+			if tok[0] != 'integer':
+				self.abort('e', 'Unexpected token', tok[3], tok[4], tok[2])
+			
+			return [['integer', tok[1], []]]
+		
+		# List of operators and their precedence order
+		# The list is created after the check for single integer conatants
+		# because they don't have operators, so, there's no need to generate
+		# the list of operators
 		ATOMS = {
 			'plus': {
 				'power': 7,
@@ -253,14 +266,6 @@ class Parser:
 			}
 		}
 		
-		# Handles single integer costants
-		if len(expr) == 1:
-			tok = expr.pop()
-			if tok[0] != 'integer':
-				self.abort('e', 'Unexpected token', tok[3], tok[4], tok[2])
-			
-			return [['integer', tok[1], []]]
-		
 		out = []
 		lhs = None  # Left-hand side
 		rhs = None  # Right-hand side
@@ -279,11 +284,26 @@ class Parser:
 				else:
 					return [[tok[0], rhs]]
 			
+			# Checks for a opening parenthesis
+			elif tok[0] == 'open paren':
+				temp = self.parse_paren(expr)
+				if expr: expr.append(temp)
+				else: out.append(temp)
+				del temp
+			
+			# Checks for a closing parenthesis
+			elif tok[0] == 'close paren':
+				self.abort('e', 'No matching open parenthesis', tok[3], tok[4], tok[2])
+			
 			# Checks for binary operators
 			elif tok[0] == 'integer' or type(tok) is list:
 				# Stand-alone constants are handled outside this loop,
-				# so it's always guarranteed to be a following token
+				# so it's always guarranteed to be a following token 
 				op = expr.pop()
+				
+				# Checks if the following token is a parenthesis
+				if op[0] in ('open paren', 'close paren'):
+					self.abort('e', 'Expected an operator, got parenthesis', op[3], op[4], op[2])
 				
 				# This check should never be triggered unless during development
 				# If this ever get triggered, something is wrong
@@ -334,3 +354,32 @@ class Parser:
 				self.abort('e', 'Invalid element', tok[3], tok[4], tok[2])
 		
 		return out
+	
+	
+	def parse_paren(self, expr):
+		# Creates a new expression out of the original one
+		expr2 = []
+		paren_count = 0
+			
+		while True:
+			# Raise an error if the expression has no matching close parenthesis
+			if not expr:
+				self.abort('e', 'No matching close parenthesis', tok[3], tok[4], tok[2])
+				
+			tok = expr.pop()
+			if tok[0] == 'open paren':
+				paren_count += 1
+			
+			elif tok[0] == 'close paren':
+				paren_count -= 1
+				if paren_count == -1: break
+			
+			expr2.append(tok)
+		
+		# Checks if the parentheses expression is empty
+		if not expr2:
+			self.abort('e', 'Missing expression inside parentheses', tok[3], tok[4], tok[2])
+				
+		# Evaluates the parentheses expression
+		return self.bond(expr2[::-1])[0]
+		#print(expr[-1], len(expr[-1]))

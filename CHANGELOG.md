@@ -22,3 +22,7 @@
 - Added binary operator **^**.
 - Added binary operator **>>**.
 - Added binary operator **<<**.
+
+## [0.3.1-alpha] - 2025-07-11
+- Functions can now terminate without _return_.
+- Added parentheses to expressions.

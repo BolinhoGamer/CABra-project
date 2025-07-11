@@ -9,3 +9,16 @@
 - Added unary operator **-**.
 - Added unary operator **+**.
 - Added unary operator **!**.
+
+## [0.3.0-alpha] - 2025-07-06
+- Added binary operators.
+- Added binary operator **+**.
+- Added binary operator **-**.
+- Added binary operator **\***.
+- Added binary operator **/**.
+- Added binary operator **%**.
+- Added binary operator **&**.
+- Added binary operator **|**.
+- Added binary operator **^**.
+- Added binary operator **>>**.
+- Added binary operator **<<**.

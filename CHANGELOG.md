@@ -26,3 +26,6 @@
 ## [0.3.1-alpha] - 2025-07-11
 - Functions can now terminate without _return_.
 - Added parentheses to expressions.
+
+## [0.3.2-alpha] - 2025-09-15
+- Added relational operators.

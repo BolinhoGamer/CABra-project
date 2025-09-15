@@ -5,7 +5,13 @@ class Generator:
 		
 		# Various counters to keep each label unique
 		self.counters = {
-			'not': 0
+			'not': 0,
+			'equals': 0,
+			'diff': 0,
+			'greater': 0,
+			'less': 0,
+			'greater_eq': 0,
+			'less_eq': 0
 		}
 		
 		# For now, it can only compile a single file
@@ -213,6 +219,124 @@ not_end_{count}:''')
 					self.out.append('''\tlw $t0, 4($sp)
 	addi $sp, $sp, 4
 	xor $v0, $t0, $v0''')
+				
+				
+				# Equals (5 == 2 -> 0)
+				case 'equals':
+					count = self.counters['equals']
+					self.counters['equals'] += 1
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append(f'''\tlw $t0, 4($sp)
+	beq $v0, $t0, equals_true_{count}
+	addi $sp, $sp, 4
+	beq $zero, $zero, equals_end_{count}
+	addi $v0, $zero, 0
+equals_true_{count}:
+	addi $v0, $zero, 1
+equals_end_{count}:''')
+				
+				
+				# Different (5 != 2 -> 1)
+				case 'diff':
+					count = self.counters['diff']
+					self.counters['diff'] += 1
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append(f'''\tlw $t0, 4($sp)
+	bne $v0, $t0, diff_true_{count}
+	addi $sp, $sp, 4
+	beq $zero, $zero, diff_end_{count}
+	addi $v0, $zero, 0
+diff_true_{count}:
+	addi $v0, $zero, 1
+diff_end_{count}:''')
+				
+				
+				# Greater (5 > 2 -> 1)
+				case 'greater':
+					count = self.counters['greater']
+					self.counters['greater'] += 1
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append(f'''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	sub $v0, $t0, $v0
+	blez $v0, greater_false_{count}
+	li $v0, 1
+	j greater_end_{count}
+	nop
+greater_false_{count}:
+	li $v0, 0
+greater_end_{count}:''')
+				
+				
+				# Less (5 < 2 -> 0)
+				case 'less':
+					count = self.counters['less']
+					self.counters['less'] += 1
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append(f'''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	sub $v0, $t0, $v0
+	bltz $v0, less_true_{count}
+	li $v0, 0
+	j less_end_{count}
+	nop
+less_true_{count}:
+	li $v0, 1
+less_end_{count}:''')
+				
+				
+				
+				# Greater Equals (5 >= 2 -> 1)
+				case 'greater_eq':
+					count = self.counters['greater_eq']
+					self.counters['greater_eq'] += 1
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append(f'''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	sub $v0, $t0, $v0
+	bgez $v0, greatereq_false_{count}
+	li $v0, 0
+	j greatereq_end_{count}
+	nop
+greatereq_false_{count}:
+	li $v0, 1
+greatereq_end_{count}:''')
+				
+				
+				# Less Equals (5 <= 2 -> 0)
+				case 'less_eq':
+					count = self.counters['less_eq']
+					self.counters['less_eq'] += 1
+					self([node[-1][0]])
+					self.out.append('''\tsw $v0, 0($sp)
+	addi $sp, $sp, -4''')
+					self([node[-1][1]])
+					self.out.append(f'''\tlw $t0, 4($sp)
+	addi $sp, $sp, 4
+	sub $v0, $t0, $v0
+	bgtz $v0, lesseq_true_{count}
+	li $v0, 1
+	j lesseq_end_{count}
+	nop
+lesseq_true_{count}:
+	li $v0, 0
+lesseq_end_{count}:''')
+	
 				
 				# Panic (⁠٥⁠•⁠▽⁠•⁠)
 				case _:

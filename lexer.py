@@ -59,7 +59,7 @@ class Lexer:
 				x += 1
 				continue
 				
-			if char in '\n\t (){};+-~!*/%><&|^':
+			if char in '\n\t (){};+-~!*/%><&|^=':
 				# Identify token
 				self.match_buffer(buffer, buff_x, y)
 				buffer = ''
@@ -94,7 +94,11 @@ class Lexer:
 						self.out.append(('bitflip', '~', '~', x, y))
 					
 					case '!':
-						self.out.append(('not', '!', '!', x, y))
+						if idx < len(code) and code[idx+1] == '=':
+							self.out.append(('diff', '!=', '!=', x, y))
+						
+						else:
+							self.out.append(('not', '!', '!', x, y))
 					
 					case '*':
 						self.out.append(('star', '*', '*', x, y))
@@ -119,12 +123,31 @@ class Lexer:
 							if code[idx+1] == '>':
 								self.out.append(('rshift', '>>', '>>', x, y))
 								skip += 1
+							
+							elif code[idx+1] == '=':
+								self.out.append(('greater_eq', '>=', '>=', x, y))
+								skip += 1
+							
+						if skip == 0:
+							self.out.append(('greater', '>', '>', x, y))
 					
 					case '<':
 						if idx < len(code):
 							if code[idx+1] == '<':
 								self.out.append(('lshift', '<<', '<<', x, y))
 								skip += 1
+							
+							elif code[idx+1] == '=':
+								self.out.append(('less_eq', '<=', '<=', x, y))
+								skip += 1
+							
+						if skip == 0:
+							self.out.append(('less', '<', '<', x, y))
+					
+					case '=':
+						if idx < len(code):
+							if code[idx+1] == '=':
+								self.out.append(('equals', '==', '==', x, y))
 			
 			else:
 				if not buffer: buff_x = x

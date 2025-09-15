@@ -21,7 +21,13 @@ OPERS = (
 	'lshift',
 	'and',
 	'or',
-	'xor'
+	'xor',
+	'equals',
+	'diff',
+	'greater',
+	'less',
+	'greater_eq',
+	'less_eq'
 )
 
 
@@ -199,52 +205,82 @@ class Parser:
 		# the list of operators
 		ATOMS = {
 			'plus': {
-				'power': 7,
+				'power': 9,
 				'binary': False
 			},
 			'minus': {
-				'power': 7,
+				'power': 9,
 				'binary': False
 			},
 			'bitflip': {
-				'power': 7,
+				'power': 9,
 				'binary': False
 			},
 			'not': {
-				'power': 7,
+				'power': 9,
 				'binary': False
 			},
 			'star': {
-				'left': 6,
-				'right': 6.1,
+				'left': 8,
+				'right': 8.1,
 				'binary': True
 			},
 			'div': {
-				'left': 6,
-				'right': 6.1,
+				'left': 8,
+				'right': 8.1,
 				'binary': True
 			},
 			'mod': {
+				'left': 8,
+				'right': 8.1,
+				'binary': True
+			},
+			'add': {
+				'left': 7,
+				'right': 7.1,
+				'binary': True
+			},
+			'sub': {
+				'left': 7,
+				'right': 7.1,
+				'binary': True
+			},
+			'rshift': {
 				'left': 6,
 				'right': 6.1,
 				'binary': True
 			},
-			'add': {
+			'lshift': {
+				'left': 6,
+				'right': 6.1,
+				'binary': True
+			},
+			'greater': {
 				'left': 5,
 				'right': 5.1,
 				'binary': True
 			},
-			'sub': {
+			'less': {
 				'left': 5,
 				'right': 5.1,
 				'binary': True
 			},
-			'rshift': {
+			'greater_eq': {
+				'left': 5,
+				'right': 5.1,
+				'binary': True
+			},
+			'less_eq': {
+				'left': 5,
+				'right': 5.1,
+				'binary': True
+			},
+			'equals': {
 				'left': 4,
 				'right': 4.1,
 				'binary': True
 			},
-			'lshift': {
+			'diff': {
 				'left': 4,
 				'right': 4.1,
 				'binary': True

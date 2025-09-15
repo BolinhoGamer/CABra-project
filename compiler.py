@@ -52,7 +52,7 @@ def print_ast(ast, depth=0):
 
 
 # Opens the selected file
-fname = 'c/test_3/parenthesis.c'
+fname = 'c/test_4/less_equals_false.c'
 with open(fname) as file:
 	code = file.read()
 	
